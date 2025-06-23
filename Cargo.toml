@@ -1,0 +1,15 @@
+[package]
+name = "notifier"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bincode = { version = "2.0.1", features = ["serde"] }
+notify-rust = { version = "4.11.7", features = ["serde"] }
+serde = { version = "1.0.219", features = ["derive"] }
+tokio = { version = "1.45.1", features = ["full"] }
+zerocopy = { version = "0.8.26", features = ["derive", "alloc"] }
+
+[[bin]]
+name="client"
+path="src/client.rs"

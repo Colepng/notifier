@@ -1,0 +1,64 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Nightly
+      working-directory: .
+      run: |
+          rustup toolchain install nightly --component rust-src  --component clippy
+          rustup override set nightly
+    - name: Lint workspace
+      working-directory: .
+      run: cargo clippy --workspace -- -D warnings
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Nightly
+      working-directory: .
+      run: |
+          rustup toolchain install nightly --component rust-src
+          rustup override set nightly
+    - name: Build workspace
+      working-directory: .
+      run: cargo build --workspace
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Nightly
+      working-directory: .
+      run: |
+          rustup toolchain install nightly --component rust-src
+          rustup override set nightly
+    - name: Run workspace tests
+      working-directory: .
+      run: cargo test
+
+  miri:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Miri
+      working-directory: .
+      run: |
+          rustup toolchain install nightly --component miri --component rust-src
+          rustup override set nightly
+          cargo miri setup
+    - name: Run miri on workspace
+      working-directory: .
+      run: cargo miri test
