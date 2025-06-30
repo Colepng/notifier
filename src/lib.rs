@@ -8,9 +8,7 @@ pub struct NotificationWrapper {
 
 impl NotificationWrapper {
     pub const fn new(text: String) -> Self {
-        Self { 
-            text
-        }
+        Self { text }
     }
 }
 

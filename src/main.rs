@@ -27,7 +27,7 @@ use std::io;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    let listener = TcpListener::bind("127.0.0.1:8080").await?;
+    let listener = TcpListener::bind("127.0.0.1:5200").await?;
 
     let (tx, rx) = broadcast::channel::<(Notification, u8)>(16);
 
@@ -66,13 +66,9 @@ async fn process_socket(
 ) -> io::Result<()> {
     let (reader, writer) = stream.into_split();
 
-    let writer_handle = tokio::spawn(async move {
-        handle_writing(writer, rx, client_id).await
-    });
+    let writer_handle = tokio::spawn(async move { handle_writing(writer, rx, client_id).await });
 
-    let reader_handle = tokio::spawn(async move {
-        handle_reading(reader, tx, client_id).await
-    });
+    let reader_handle = tokio::spawn(async move { handle_reading(reader, tx, client_id).await });
 
     let _ = writer_handle.await.unwrap();
     let _ = reader_handle.await.unwrap();
@@ -80,7 +76,11 @@ async fn process_socket(
     Ok(())
 }
 
-async fn handle_writing(mut writer: OwnedWriteHalf, mut rx: Receiver<(Notification, u8)>, client_id: u8) -> io::Result<()> {
+async fn handle_writing(
+    mut writer: OwnedWriteHalf,
+    mut rx: Receiver<(Notification, u8)>,
+    client_id: u8,
+) -> io::Result<()> {
     let config = bincode::config::standard();
 
     loop {
@@ -94,7 +94,11 @@ async fn handle_writing(mut writer: OwnedWriteHalf, mut rx: Receiver<(Notificati
     }
 }
 
-async fn handle_reading(mut reader: OwnedReadHalf, tx: Sender<(Notification, u8)>, client_id: u8) -> io::Result<()> {
+async fn handle_reading(
+    mut reader: OwnedReadHalf,
+    tx: Sender<(Notification, u8)>,
+    client_id: u8,
+) -> io::Result<()> {
     let config = bincode::config::standard();
 
     loop {
@@ -102,7 +106,8 @@ async fn handle_reading(mut reader: OwnedReadHalf, tx: Sender<(Notification, u8)
         let mut buf = vec![0u8; usize::try_from(size).unwrap()];
         reader.read_exact(&mut buf).await?;
 
-        let (notification, _)= decode_from_slice::<NotificationConfig, Configuration>(&buf, config).unwrap();
+        let (notification, _) =
+            decode_from_slice::<NotificationConfig, Configuration>(&buf, config).unwrap();
 
         let notification = Notification::new().summary(&notification.text).finalize();
 
